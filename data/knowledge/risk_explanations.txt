@@ -1,0 +1,14 @@
+High Amount Deviation:
+Transactions that significantly exceed a user’s historical average amount may indicate fraud or account misuse.
+
+Rapid Transaction Frequency:
+Multiple transactions occurring in a short time window can signal automated or malicious activity.
+
+Unusual Transaction Timing:
+Transactions executed at atypical hours for a user may represent unauthorized access.
+
+New Device Usage:
+Transactions initiated from a previously unseen device increase the likelihood of account compromise.
+
+Location Variance:
+Transactions from unusual or distant locations may indicate credential theft.

@@ -11,3 +11,4 @@ class TransactionRequest(BaseModel):
 class TransactionResponse(BaseModel):
     risk_score: float
     risk_level: str
+    explanation: str

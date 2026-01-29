@@ -5,3 +5,8 @@ numpy
 scikit-learn
 pydantic
 python-dotenv
+langchain
+langchain-community
+langchain-groq
+chromadb
+sentence-transformers
