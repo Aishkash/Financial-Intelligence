@@ -51,14 +51,19 @@ class RAGExplainer:
         context = "\n".join([d.page_content for d in docs])
 
         prompt = f"""
-You are a financial risk analyst.
-Explain the transaction risk clearly using only the context below.
+You are a fraud detection assistant.
+
+Use the context to justify the risk in a concise way.
+
+Risk factors: {', '.join(risk_factors)}
 
 Context:
 {context}
 
-Risk Factors:
-{', '.join(risk_factors)}
+Write only 2 to 3 short sentences that directly explain
+why these factors indicate possible fraud or abnormal behaviour.
+Do not give long definitions or general theory.
+Be specific to the provided risk factors.
 """
 
         response = self.llm.invoke(prompt)

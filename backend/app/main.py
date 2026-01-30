@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 from backend.app.schemas.transaction import TransactionRequest, TransactionResponse
@@ -9,7 +10,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # rag_explainer = RAGExplainer()
+
 app = FastAPI(title="AI Transaction Risk System")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---- Load and train model on startup ----
 df = pd.read_csv("data/processed/transactions_with_features.csv")
@@ -87,7 +97,8 @@ def analyze_transaction(txn: TransactionRequest):
         explanation = f"Explanation unavailable: {str(e)}"
 
     return {
-        "risk_score": round(float(risk_score), 3),
-        "risk_level": risk_level,
-        "explanation": explanation
-    }
+    "risk_score": round(float(risk_score), 3),
+    "risk_level": risk_level,
+    "explanation": explanation,
+    "risk_factors": risk_factors
+}
