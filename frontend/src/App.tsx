@@ -59,149 +59,171 @@ export default function App() {
     : "green";
 
 
-  return (
-    <div style={{ fontFamily: "sans-serif", padding: 30, maxWidth: 600 }}>
-      <h1>AI Transaction Risk Analyzer</h1>
+  return ( 
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#000",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 920,
+          background: "#111",
+          padding: 30,
+          borderRadius: 10,
+          fontFamily: "sans-serif",
+        }}
+      >
+        <h1 style={{ textAlign: "center" }}>
+          AI Transaction Risk Analyzer
+        </h1>
 
-      <button onClick={() => setForm({
-        user_id: 10,
-        amount: 20000,
-        timestamp: "2024-01-12T03:14:00",
-        device_id: 99,
-        location: 20
-      })}>
-        Load High-Risk Example
-      </button>
-
-      <button onClick={() => setForm({
-        user_id: 10,
-        amount: 200,
-        timestamp: "2024-01-12T14:30:00",
-        device_id: 5,
-        location: 3
-      })}>
-        Load Normal Example
-      </button>
-
-      <div style={{ display: "grid", gap: 10 }}>
-        <input name="user_id" placeholder="User ID" value={form.user_id} onChange={handleChange} />
-        <input name="amount" placeholder="Amount" value={form.amount} onChange={handleChange} />
-        <input name="timestamp" placeholder="Timestamp (ISO)" value={form.timestamp} onChange={handleChange} />
-        <input name="device_id" placeholder="Device ID" value={form.device_id} onChange={handleChange} />
-        <input name="location" placeholder="Location" value={form.location} onChange={handleChange} />
-
-        <button onClick={analyze} disabled={loading}>
-          {loading ? "Analyzing transaction..." : "Analyze Transaction"}
+        <button onClick={() => setForm({
+          user_id: 10,
+          amount: 20000,
+          timestamp: "2024-01-12T03:14:00",
+          device_id: 99,
+          location: 20
+        })}>
+          Load High-Risk Example
         </button>
-      </div>
-      {loading && <p>Contacting risk engine…</p>}
 
-      {result && (
-        <div
-          style={{
-            marginTop: 20,
-            padding: 20,
-            borderRadius: 8,
-            background:
-              result.risk_level === "HIGH"
-                ? "#3b0d0d"
-                : result.risk_level === "MEDIUM"
-                ? "#3b2d0d"
-                : "#0d3b1b",
-            border: "1px solid #444"
-          }}
-        >
-          <h2>Result</h2>
+        <button onClick={() => setForm({
+          user_id: 10,
+          amount: 200,
+          timestamp: "2024-01-12T14:30:00",
+          device_id: 5,
+          location: 3
+        })}>
+          Load Normal Example
+        </button>
 
-          <p>
-            <b>Risk Score:</b> {result.risk_score}
-          </p>
+        <div style={{ display: "grid", gap: 10 }}>
+          <input name="user_id" placeholder="User ID" value={form.user_id} onChange={handleChange} />
+          <input name="amount" placeholder="Amount" value={form.amount} onChange={handleChange} />
+          <input name="timestamp" placeholder="Timestamp (ISO)" value={form.timestamp} onChange={handleChange} />
+          <input name="device_id" placeholder="Device ID" value={form.device_id} onChange={handleChange} />
+          <input name="location" placeholder="Location" value={form.location} onChange={handleChange} />
 
-          <p>
-            <b>Risk Level:</b>{" "}
-            <span style={{ color: riskColor, fontWeight: "bold" }}>
-              {result.risk_level}
-            </span>
-          </p>
-          <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {signals.map((s, i) => (
-              <span
-                key={i}
-                style={{
-                  padding: "4px 8px",
-                  borderRadius: 12,
-                  background: "#222",
-                  border: "1px solid #444",
-                  fontSize: 12
-                }}
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+          <button onClick={analyze} disabled={loading}>
+            {loading ? "Analyzing transaction..." : "Analyze Transaction"}
+          </button>
+        </div>
+        {loading && <p>Contacting risk engine…</p>}
 
-          <p>
-            <b>Explanation:</b> {result.explanation}
-          </p>
-
-          {/* progress bar */}
+        {result && (
           <div
             style={{
-              height: 10,
-              background: "#eee",
-              borderRadius: 5,
-              overflow: "hidden",
-              marginTop: 10
+              marginTop: 20,
+              padding: 20,
+              borderRadius: 8,
+              background:
+                result.risk_level === "HIGH"
+                  ? "#3b0d0d"
+                  : result.risk_level === "MEDIUM"
+                  ? "#3b2d0d"
+                  : "#0d3b1b",
+              border: "1px solid #444"
             }}
           >
-            <div
-              style={{
-                width: `${result.risk_score * 100}%`,
-                background: riskColor,
-                height: "100%"
-              }}
-            />
-          </div>
-        </div>
-      )}
-      {history.length > 0 && (
-        <div style={{ marginTop: 30 }}>
-          <h3>Recent Analyses</h3>
-          {history.map((h, i) => (
-            <div
-              key={i}
-              style={{
-                border: "1px solid #333",
-                borderRadius: 8,
-                padding: 10,
-                marginTop: 10,
-                background: "#111"
-              }}
-            >
-              <div>Score: {h.risk_score}</div>
-              <div>
-                Level:{" "}
+            <h2>Result</h2>
+
+            <p>
+              <b>Risk Score:</b> {result.risk_score}
+            </p>
+
+            <p>
+              <b>Risk Level:</b>{" "}
+              <span style={{ color: riskColor, fontWeight: "bold" }}>
+                {result.risk_level}
+              </span>
+            </p>
+            <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {signals.map((s, i) => (
                 <span
+                  key={i}
                   style={{
-                    color:
-                      h.risk_level === "HIGH"
-                        ? "red"
-                        : h.risk_level === "MEDIUM"
-                        ? "orange"
-                        : "green",
-                    fontWeight: "bold"
+                    padding: "4px 8px",
+                    borderRadius: 12,
+                    background: "#222",
+                    border: "1px solid #444",
+                    fontSize: 12
                   }}
                 >
-                  {h.risk_level}
+                  {s}
                 </span>
-              </div>
-              <div style={{ fontSize: 12, opacity: 0.8 }}>
-                {h.explanation}
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+
+            <p>
+              <b>Explanation:</b> {result.explanation}
+            </p>
+
+            {/* progress bar */}
+            <div
+              style={{
+                height: 10,
+                background: "#eee",
+                borderRadius: 5,
+                overflow: "hidden",
+                marginTop: 10
+              }}
+            >
+              <div
+                style={{
+                  width: `${result.risk_score * 100}%`,
+                  background: riskColor,
+                  height: "100%"
+                }}
+              />
+            </div>
+          </div>
+        )}
+        {history.length > 0 && (
+          <div style={{ marginTop: 30 }}>
+            <h3>Recent Analyses</h3>
+            {history.map((h, i) => (
+              <div
+                key={i}
+                style={{
+                  border: "1px solid #333",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginTop: 10,
+                  background: "#111"
+                }}
+              >
+                <div>Score: {h.risk_score}</div>
+                <div>
+                  Level:{" "}
+                  <span
+                    style={{
+                      color:
+                        h.risk_level === "HIGH"
+                          ? "red"
+                          : h.risk_level === "MEDIUM"
+                          ? "orange"
+                          : "green",
+                      fontWeight: "bold"
+                    }}
+                  >
+                    {h.risk_level}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>
+                  {h.explanation}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
