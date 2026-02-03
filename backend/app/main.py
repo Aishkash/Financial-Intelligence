@@ -1,106 +1,143 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import pandas as pd
+import joblib
 
-from backend.app.schemas.transaction import TransactionRequest, TransactionResponse
-from backend.app.features.feature_engineering import generate_features
-from backend.app.models.risk_model import RiskModel
-from backend.app.rag.rag_explainer import RAGExplainer
-from dotenv import load_dotenv
-load_dotenv()
-
-# rag_explainer = RAGExplainer()
-
-app = FastAPI(title="AI Transaction Risk System")
+# ---------------------------
+# App setup
+# ---------------------------
+app = FastAPI(title="AI Transaction Risk Engine")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],  # frontend later
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---- Load and train model on startup ----
-df = pd.read_csv("data/processed/transactions_with_features.csv")
+# ---------------------------
+# Load artifacts ONCE
+# ---------------------------
+DATA_PATH = "data/processed/transactions_with_features.csv"
+MODEL_PATH = "backend/app/models/risk_model.pkl"
 
-feature_cols = [
-    "amount",
+historical_df = pd.read_csv(DATA_PATH)
+model = joblib.load(MODEL_PATH)
+
+FEATURES = [
     "hour",
     "day_of_week",
     "time_since_last_txn",
+    "amount_zscore",
     "user_avg_amount",
-    "user_std_amount",
-    "amount_deviation"
+    "user_std_amount"
 ]
 
+# ---------------------------
+# Request / Response schema
+# ---------------------------
+class TransactionRequest(BaseModel):
+    user_id: int
+    transaction_type: str
+    amount: float
+    timestamp: str
+    device_id: str
+    location: str
 
-X = df[feature_cols]
-y = df["is_fraud"]
+class TransactionResponse(BaseModel):
+    risk_score: float
+    risk_level: str
+    risk_factors: list[str]
+    explanation: str
 
-risk_model = RiskModel()
-risk_model.train(X, y)
+# ---------------------------
+# Helper: compute features for ONE txn
+# ---------------------------
+def build_features(txn: TransactionRequest) -> pd.DataFrame:
+    df = historical_df[historical_df["user_id"] == txn.user_id].copy()
 
-@app.get("/")
-def health_check():
-    return {"status": "ok", "message": "Risk system running"}
+    new_row = {
+        "user_id": txn.user_id,
+        "transaction_type": txn.transaction_type,
+        "amount": txn.amount,
+        "timestamp": pd.to_datetime(txn.timestamp),
+        "device_id": txn.device_id,
+        "location": txn.location,
+    }
 
-@app.post("/analyze", response_model=TransactionResponse)
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    df = df.sort_values("timestamp")
 
- 
-def analyze_transaction(txn: TransactionRequest):
+    # Time features
+    df["hour"] = df["timestamp"].dt.hour
+    df["day_of_week"] = df["timestamp"].dt.dayofweek
 
-    # Convert input to DataFrame
-    df = pd.DataFrame([txn.dict()])
+    df["time_since_last_txn"] = (
+        df.groupby("user_id")["timestamp"]
+        .diff()
+        .dt.total_seconds()
+        .fillna(0)
+    )
 
-    # Generate features
-    df = generate_features(df)
+    # Amount stats
+    stats = df.groupby("user_id")["amount"].agg(["mean", "std"]).reset_index()
+    stats.columns = ["user_id", "user_avg_amount", "user_std_amount"]
+    df = df.merge(stats, on="user_id", how="left")
 
-    X = df[[
-        "amount",
-        "hour",
-        "day_of_week",
-        "time_since_last_txn",
-        "user_avg_amount",
-        "user_std_amount",
-        "amount_deviation"
-    ]]
+    df["amount_zscore"] = (
+        df["amount"] - df["user_avg_amount"]
+    ) / (df["user_std_amount"] + 1)
 
-    # Predict risk
-    risk_score = risk_model.predict_risk(X)[0]
+    return df.tail(1)[FEATURES]
 
-    # Risk bucket
-    if risk_score > 0.75:
-        risk_level = "HIGH"
-    elif risk_score > 0.4:
-        risk_level = "MEDIUM"
+# ---------------------------
+# Risk explanation logic
+# ---------------------------
+def explain(txn_df: pd.DataFrame) -> tuple[list[str], str]:
+    factors = []
+
+    if txn_df["amount_zscore"].iloc[0] > 3:
+        factors.append("Unusually large transaction compared to user's history")
+
+    if txn_df["time_since_last_txn"].iloc[0] < 60:
+        factors.append("Rapid transaction frequency")
+
+    if txn_df["hour"].iloc[0] < 5:
+        factors.append("Transaction at unusual hour for this user")
+
+    if not factors:
+        explanation = (
+            "This transaction aligns with the user's historical behavior "
+            "in terms of amount, timing, and frequency."
+        )
     else:
-        risk_level = "LOW"
+        explanation = " | ".join(factors)
 
-    risk_factors = []
+    return factors, explanation
 
-    if df["amount_deviation"].iloc[0] > 3:
-        risk_factors.append("High Amount Deviation")
+# ---------------------------
+# API endpoint
+# ---------------------------
+@app.post("/analyze", response_model=TransactionResponse)
+def analyze_transaction(txn: TransactionRequest):
+    X = build_features(txn)
 
-    if df["time_since_last_txn"].iloc[0] < 10:
-        risk_factors.append("Rapid Transaction Frequency")
+    risk_score = float(model.predict_proba(X)[0][1])
 
-    if df["hour"].iloc[0] < 5:
-        risk_factors.append("Unusual Transaction Timing")
+    if risk_score > 0.7:
+        level = "HIGH"
+    elif risk_score > 0.4:
+        level = "MEDIUM"
+    else:
+        level = "LOW"
 
-    if not risk_factors:
-        risk_factors.append("General Anomalous Behavior")
-
-    # 🔒 SAFE RAG CALL
-    try:
-        rag_explainer = RAGExplainer()
-        explanation = rag_explainer.explain(risk_factors)
-    except Exception as e:
-        explanation = f"Explanation unavailable: {str(e)}"
+    factors, explanation = explain(X)
 
     return {
-    "risk_score": round(float(risk_score), 3),
-    "risk_level": risk_level,
-    "explanation": explanation,
-    "risk_factors": risk_factors
-}
+        "risk_score": round(risk_score, 3),
+        "risk_level": level,
+        "risk_factors": factors,
+        "explanation": explanation,
+    }
