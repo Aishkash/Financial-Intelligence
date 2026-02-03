@@ -63,20 +63,20 @@ export default function App() {
     <div
       style={{
         minHeight: "100vh",
-        background: "#000",
+        background: "#FCE8E8", 
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: 20,
+        padding:40,
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 920,
-          background: "#111",
-          padding: 30,
-          borderRadius: 10,
+          maxWidth: 900,
+          background: "#0F172A",
+          padding: "48px 40px", 
+          borderRadius: 12,
           fontFamily: "sans-serif",
         }}
       >
@@ -111,7 +111,18 @@ export default function App() {
           <input name="device_id" placeholder="Device ID" value={form.device_id} onChange={handleChange} />
           <input name="location" placeholder="Location" value={form.location} onChange={handleChange} />
 
-          <button onClick={analyze} disabled={loading}>
+          <button onClick={analyze} disabled={loading} 
+          style={{
+            backgroundColor: loading ? "#93C5FD" : "#60A5FA", // sky blue
+            color: "#0F172A",
+            padding: "12px 16px",
+            borderRadius: 8,
+            border: "none",
+            fontWeight: 600,
+            cursor: loading ? "not-allowed" : "pointer",
+            transition: "background-color 0.2s ease",
+          }}
+          >
             {loading ? "Analyzing transaction..." : "Analyze Transaction"}
           </button>
         </div>

@@ -46,6 +46,8 @@ def health_check():
     return {"status": "ok", "message": "Risk system running"}
 
 @app.post("/analyze", response_model=TransactionResponse)
+
+ 
 def analyze_transaction(txn: TransactionRequest):
 
     # Convert input to DataFrame
