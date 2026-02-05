@@ -5,7 +5,7 @@ from datetime import datetime
 import pandas as pd
 import joblib
 
-from backend.app.rag.rag_explainer import RAGExplainer
+from app.rag.rag_explainer import RAGExplainer
 
 # ---------------------------
 # App setup
