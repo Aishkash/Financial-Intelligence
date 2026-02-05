@@ -3,10 +3,26 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
-import os
+
 
 class RAGExplainer:
     def __init__(self):
+        # DO NOT load heavy models at startup
+        self.embeddings = None
+        self.vectorstore = None
+        self.llm = ChatGroq(
+            model="llama-3.1-8b-instant",
+            temperature=0.2
+        )
+        self.loaded = False
+
+    # lazy load heavy components
+    def _initialize_rag(self):
+        if self.loaded:
+            return
+
+        print("Loading RAG components...")
+
         self.embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
@@ -16,12 +32,10 @@ class RAGExplainer:
             embedding_function=self.embeddings
         )
 
-        self.llm = ChatGroq(
-            model="llama-3.1-8b-instant",
-            temperature=0.2
-        )
-
         self._load_knowledge()
+
+        self.loaded = True
+        print("RAG loaded successfully")
 
     def _load_knowledge(self):
         if self.vectorstore._collection.count() > 0:
@@ -39,6 +53,9 @@ class RAGExplainer:
         self.vectorstore.add_documents(chunks)
 
     def explain(self, risk_factors: list[str]) -> str:
+        # load ONLY when explanation needed
+        self._initialize_rag()
+
         query = "Explain the following risk factors: " + ", ".join(risk_factors)
 
         docs = self.vectorstore.similarity_search(query, k=3)
