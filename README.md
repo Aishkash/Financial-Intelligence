@@ -1,17 +1,17 @@
 # AI-Driven Transaction Risk & Financial Intelligence System
 
 ## Overview
+This project is a production-style transaction risk monitoring system that combines:
 
-This project implements an **industry-style transaction risk monitoring system** that combines:
+- Machine Learning for real-time risk scoring  
+- Behavioral analytics for anomaly detection  
+- Retrieval-Augmented Generation (RAG) for explainable decisions  
+- FastAPI backend for inference  
+- React frontend for live testing  
 
-- Classical Machine Learning for **risk scoring**
-- Behavioral feature engineering for **anomaly detection**
-- Retrieval-Augmented Generation (RAG) for **explainable risk decisions**
-- A FastAPI backend for **real-time inference**
+The system simulates how modern financial institutions detect and explain suspicious transactions.
 
-The system mirrors how **financial institutions detect, score, and explain risky transactions** in production.
-
-> Synthetic data is used to simulate realistic transaction behavior while maintaining data privacy.
+Synthetic data is used to preserve privacy while maintaining realistic transaction behavior.
 
 ---
 
@@ -27,193 +27,219 @@ This system answers three core questions:
 
 ---
 
+## Features
+
+- Real-time transaction risk scoring
+- Behavioral anomaly detection
+- New device & new location detection
+- Explainable AI using RAG + LLM
+- Risk level classification (LOW / MEDIUM / HIGH)
+- Production-style backend architecture
+- Interactive frontend dashboard
+
+---
+
+## Tech Stack
+
+### Backend & ML
+- Python 3.12
+- FastAPI
+- Pandas, NumPy
+- Scikit-learn
+- Joblib
+- LangChain
+- ChromaDB
+- Sentence Transformers
+- Groq LLM API
+
+### Frontend
+- React (Vite)
+- TypeScript
+- Fetch API
+
+---
+
 ## System Architecture
 ```
 ai-transaction-risk-system/
+│
 ├── backend/
-│   ├── app/
-│   │   ├── main.py                 # FastAPI entry point
-│   │   │                            # Transaction request → response
-│   │   │
-│   │   ├── schemas/
-│   │   │   └── transaction.py      # API request & response schemas
-│   │   │
-│   │   ├── features/
-│   │   │   └── feature_engineering.py
-│   │   │                            # Behavioral feature extraction
-│   │   │                            # (time, frequency, deviation)
-│   │   │
-│   │   ├── models/
-│   │   │   └── risk_model.py        # Classical ML risk scoring model
-│   │   │                            # Outputs risk probability
-│   │   │
-│   │   ├── rag/
-│   │   │   └── rag_explainer.py     # RAG-based explanation engine
-│   │   │                            # LLM + vector store
-│   │   │
-│   │   └── db/
-│   │       └── (optional)           # Future audit / persistence layer
-│   │
-│   └── requirements.txt             # Backend dependencies
+│   └── app/
+│       ├── main.py
+│       ├── models/
+│       │   └── risk_model.pkl
+│       ├── rag/
+│       │   └── rag_explainer.py
+│       ├── features/
+│       │   └── feature_engineering.py
+│       └── schemas/
+│           └── transaction.py
+│
+├── frontend/
+│   └── src/
+│       └── App.tsx
 │
 ├── data/
 │   ├── raw/
-│   │   └── transactions.csv         # Synthetic raw transaction data
-│   │
 │   ├── processed/
-│   │   └── transactions_with_features.csv
-│   │                                # ML-ready dataset
-│   │
 │   ├── knowledge/
-│   │   └── risk_explanations.txt    # Domain knowledge for RAG
-│   │
-│   └── vector_store/                # ChromaDB embeddings (ignored in git)
+│   └── vector_store/
 │
 ├── notebooks/
-│   ├── 01_generate_data.ipynb       # Data simulation
-│   ├── 02_feature_engineering.ipynb # Feature + label creation
-│   └── 03_model_training.ipynb      # Model experimentation
-│
-├── .env                             # Environment variables (GROQ_API_KEY)
-├── .gitignore
+├── .env
 ├── README.md
-└── venv/                            # Local virtual environment (not tracked)
+└── requirements.txt
 ```
 
+---
 
 
 
 
+## How the System Works
+
+### Step 1 — Transaction Input
+User submits:
+- amount  
+- timestamp  
+- device  
+- location  
+- transaction type  
+
+### Step 2 — Feature Engineering
+Behavioral features generated:
+- time of transaction  
+- frequency  
+- user average spend  
+- deviation from history  
+- device familiarity  
+- location familiarity  
+
+### Step 3 — Risk Model
+ML model outputs probability:
+
+```
+0.0 → 1.0 risk score
+```
+
+Mapped to:
+- LOW  
+- MEDIUM  
+- HIGH  
+
+### Step 4 — Policy Risk Adjustments
+Extra risk added if:
+- New device detected  
+- Unusual location detected  
+- Abnormal behavior  
+
+### Step 5 — RAG Explanation Engine
+RAG generates human explanation using:
+- risk factors
+- domain knowledge base
+- LLM reasoning
 
 ---
 
-## Data Pipeline
+## API Endpoints
 
-### 1. Synthetic Data Generation
+### Analyze Transaction
+```
+POST /analyze
+```
 
-Transactions are synthetically generated to resemble real-world behavior.
+Request:
+```json
+{
+  "user_id": 10,
+  "transaction_type": "payment",
+  "amount": 1200,
+  "timestamp": "2024-01-12T12:14:00",
+  "device_id": "device_10_1",
+  "location": "UK"
+}
+```
 
-Fields include:
-- `user_id`
-- `amount`
-- `timestamp`
-- `device_id`
-- `location`
-
-Stored at:
-
----
-
-### 2. Feature Engineering (Behavioral Modeling)
-
-Key engineered features:
-
-- `hour` – time-of-day behavior
-- `day_of_week` – weekday vs weekend activity
-- `time_since_last_txn` – transaction velocity
-- `user_avg_amount` – baseline spending
-- `user_std_amount` – spending volatility
-- `amount_deviation` – anomaly score
-
-These features model **behavioral deviation**, not just transaction size.
-
----
-
-### 3. Risk Model
-
-- Classical ML model trained on engineered features
-- Outputs a **continuous risk probability**
-- Mapped to risk levels:
-  - LOW
-  - MEDIUM
-  - HIGH
-
-Classical ML is intentionally used for:
-- Interpretability
-- Stability
-- Regulatory friendliness
-
----
-
-## Explainability with RAG
-
-### Why RAG?
-
-Fraud models alone produce numbers.  
-Financial systems require **clear, auditable explanations**.
-
-### RAG Flow
-
-1. Identify dominant risk factors:
-   - High amount deviation
-   - Rapid transaction frequency
-   - Unusual transaction timing
-2. Pass risk factors to an LLM
-3. Generate a human-readable explanation
-
-RAG is used **only for explanation**, not prediction.
-
----
-
-Get/
-
-```bash
 Response:
 ```json
 {
-  "status": "ok",
-  "message": "Risk system running"
-}
-```
-Analyze Transaction
-```bash
-POST /analyze
-```
-Request
-```bash
-{
-  "user_id": 10,
-  "amount": 12000,
-  "timestamp": "2024-01-12T03:14:00",
-  "device_id": 99,
-  "location": 20
+  "risk_score": 0.067,
+  "risk_level": "LOW",
+  "explanation": "This transaction aligns well with the user's historical spending patterns and behavior."
 }
 ```
 
-Response
-```bash
-{
-  "risk_score": 0.833,
-  "risk_level": "HIGH",
-  "explanation": "This transaction was flagged due to a significant deviation from the user’s typical spending behavior combined with rapid transaction activity."
-}
+---
+
+## Run Locally
+
+### 1. Clone repo
+```
+git clone <your_repo_url>
+cd ai-transaction-risk-system
 ```
 
-## ⚙️ Tech Stack
-
-### Backend & Machine Learning
-- **Python 3.12** – Core programming language
-- **FastAPI** – High-performance API framework for real-time inference
-- **Pandas / NumPy** – Data manipulation and numerical computation
-- **Scikit-learn** – Classical machine learning models for risk scoring
-- **Sentence Transformers** – Text embeddings for semantic similarity
-- **ChromaDB** – Vector database for retrieval-augmented generation
-- **Groq LLM API** – Low-latency large language model inference
-- **LangChain** – Lightweight orchestration for RAG pipelines
-
-Running the Project Locally
-```bash
-# Create virtual environment
+### 2. Create virtual environment
+```
 python -m venv .venv
 source .venv/bin/activate
+```
 
-# Install dependencies
+### 3. Install backend dependencies
+```
 pip install -r backend/requirements.txt
+```
 
-# Set environment variable
-export GROQ_API_KEY=your_api_key_here
+### 4. Add environment variable
+Create `.env` file:
+```
+GROQ_API_KEY=your_key_here
+```
 
-# Start FastAPI server
+### 5. Start backend
+```
 uvicorn backend.app.main:app --reload
 ```
 
+Backend runs on:
+```
+http://127.0.0.1:8000
+```
+
+### 6. Start frontend
+```
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend runs on:
+```
+http://localhost:5173
+```
+
+---
+
+## Why This Project Matters
+This project demonstrates:
+
+- Applied machine learning in finance  
+- Explainable AI for risk decisions  
+- Real-time API deployment  
+- LLM + ML hybrid system design  
+- Production-style architecture  
+
+It reflects how modern fintech and banking fraud systems are built.
+
+---
+
+## Future Improvements
+- User authentication
+- Database logging (PostgreSQL)
+- Kafka streaming simulation
+- Dashboard analytics
+- Cloud deployment (AWS/GCP)
+- Model retraining pipeline
+- Alerting system
+
+---
