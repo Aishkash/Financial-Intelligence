@@ -22,7 +22,7 @@ app.add_middleware(
 # ---------------------------
 # Load artifacts ONCE
 # ---------------------------
-DATA_PATH = "data/processed/transactions_with_features.csv"
+DATA_PATH = "backend/data/processed/transactions_with_features.csv"
 MODEL_PATH = "backend/app/models/risk_model.pkl"
 
 historical_df = pd.read_csv(DATA_PATH, parse_dates=["timestamp"])
